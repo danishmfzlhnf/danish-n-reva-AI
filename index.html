@@ -9,9 +9,10 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        code, pre { font-family: 'Fira Code', monospace; }
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -50,19 +51,13 @@
                     <button class="chat-history-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-sm text-slate-300 hover:text-white flex items-center justify-between group transition">
                         <div class="flex items-center gap-2.5 truncate">
                             <i data-lucide="message-square" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
-                            <span class="truncate">Analisis Code Python</span>
+                            <span class="truncate">Web Scraping Python</span>
                         </div>
                     </button>
                     <button class="chat-history-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-sm text-slate-300 hover:text-white flex items-center justify-between group transition">
                         <div class="flex items-center gap-2.5 truncate">
                             <i data-lucide="message-square" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
-                            <span class="truncate">Ide Konten Landing Page</span>
-                        </div>
-                    </button>
-                    <button class="chat-history-item w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-sm text-slate-300 hover:text-white flex items-center justify-between group transition">
-                        <div class="flex items-center gap-2.5 truncate">
-                            <i data-lucide="message-square" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
-                            <span class="truncate">Draft Email Bisnis</span>
+                            <span class="truncate">Teori Relativitas Einstein</span>
                         </div>
                     </button>
                 </div>
@@ -143,8 +138,6 @@
                 </div>
             </div>
 
-            <!-- Chat Bubbles Akan Di-generate lewat JavaScript -->
-
         </div>
 
         <!-- INPUT BOX ATAS / BAR -->
@@ -186,7 +179,7 @@
 
     </main>
 
-    <!-- JAVASCRIPT UNTUK INTERAKSI -->
+    <!-- JAVASCRIPT UNTUK INTERAKSI DAN SIMULASI AI BERPIKIR -->
     <script>
         // Initialize Lucide Icons
         lucide.createIcons();
@@ -204,13 +197,8 @@
         const newChatBtn = document.getElementById('new-chat-btn');
 
         // Sidebar Responsive Toggle
-        openSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.remove('-translate-x-full');
-        });
-
-        closeSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-        });
+        openSidebarBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        closeSidebarBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
 
         // Model Switcher Badge Handler
         modelSelect.addEventListener('change', (e) => {
@@ -219,30 +207,31 @@
         });
 
         // Submit Form Handler
-        chatForm.addEventListener('submit', (e) => {
+        chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = userInput.value.trim();
             if (!text) return;
 
-            // Remove welcome screen if exists
-            if (welcomeScreen) {
-                welcomeScreen.classList.add('hidden');
-            }
+            if (welcomeScreen) welcomeScreen.classList.add('hidden');
 
-            // Append User Message
-            appendMessage('user', text);
+            // 1. Tampilkan Pesan User
+            appendUserMessage(text);
             userInput.value = '';
             userInput.style.height = 'auto';
 
-            // Simulate AI Thinking Response
+            // 2. Tampilkan Loading State "Sedang Berpikir"
             showTypingIndicator();
 
-            setTimeout(() => {
-                removeTypingIndicator();
-                const selectedModel = modelSelect.options[modelSelect.selectedIndex].text;
-                const aiResponse = `Ini adalah balasan simulasi dari **Danish N Reva AI** (Menggunakan model: **${selectedModel}**).\n\nAnda mengirimkan pesan: "${text}".`;
-                appendMessage('ai', aiResponse);
-            }, 1200);
+            // 3. Ambil data respon natural berdasarkan prompt & model
+            const currentModel = modelSelect.options[modelSelect.selectedIndex].text;
+            const aiData = generateAIResponseData(text, currentModel);
+
+            // Simulasi delay berpikir AI (1.5 detik)
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            removeTypingIndicator();
+
+            // 4. Render bubble AI dengan Proses Berpikir & Streaming Teks
+            await renderAIStreamingMessage(aiData.thought, aiData.answer);
         });
 
         // Auto Resize Textarea
@@ -251,7 +240,7 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Enter key to submit (Shift+Enter for newline)
+        // Enter key to submit
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -259,34 +248,61 @@
             }
         });
 
-        // Append Message function
-        function appendMessage(sender, text) {
+        // Function Tambah Pesan User
+        function appendUserMessage(text) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = `flex gap-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-
-            if (sender === 'user') {
-                msgDiv.innerHTML = `
-                    <div class="bg-indigo-600 text-white px-4 py-3 rounded-2xl max-w-[80%] rounded-tr-none text-sm leading-relaxed shadow-md">
-                        ${text}
-                    </div>
-                `;
-            } else {
-                msgDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-2xl max-w-[80%] rounded-tl-none text-sm leading-relaxed shadow-md">
-                        ${text.replace(/\n/g, '<br>')}
-                    </div>
-                `;
-            }
-
+            msgDiv.className = 'flex gap-4 justify-end';
+            msgDiv.innerHTML = `
+                <div class="bg-indigo-600 text-white px-4 py-3 rounded-2xl max-w-[80%] rounded-tr-none text-sm leading-relaxed shadow-md">
+                    ${escapeHtml(text)}
+                </div>
+            `;
             chatContainer.appendChild(msgDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
-            lucide.createIcons();
         }
 
-        // Typing Indicator
+        // Render AI Message + Streaming Effect
+        async function renderAIStreamingMessage(thoughtText, fullAnswer) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-4 justify-start';
+
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 mt-1">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-2xl max-w-[85%] rounded-tl-none text-sm leading-relaxed shadow-md space-y-3">
+                    <!-- Collapse Proses Berpikir (Reasoning Box) -->
+                    <details class="bg-slate-950/60 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400 group" open>
+                        <summary class="cursor-pointer font-medium flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 select-none">
+                            <i data-lucide="brain" class="w-3.5 h-3.5"></i>
+                            <span>Proses Berpikir Danish N Reva AI</span>
+                        </summary>
+                        <div class="mt-2 text-slate-400 leading-relaxed italic border-t border-slate-800/80 pt-2">
+                            ${escapeHtml(thoughtText)}
+                        </div>
+                    </details>
+
+                    <!-- Container Jawaban Streaming -->
+                    <div class="ai-content-output text-slate-200"></div>
+                </div>
+            `;
+
+            chatContainer.appendChild(msgDiv);
+            lucide.createIcons();
+
+            const outputContainer = msgDiv.querySelector('.ai-content-output');
+
+            // Streaming Character by Character Effect
+            let currentText = "";
+            for (let i = 0; i < fullAnswer.length; i++) {
+                currentText += fullAnswer[i];
+                outputContainer.innerHTML = parseMarkdownSimple(currentText);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                await new Promise(r => setTimeout(r, 12)); // Kecepatan streaming
+            }
+        }
+
+        // Indicator Loading AI
         function showTypingIndicator() {
             const indicator = document.createElement('div');
             indicator.id = 'typing-indicator';
@@ -295,9 +311,9 @@
                 <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-4 py-3 rounded-2xl text-xs flex items-center gap-1.5">
-                    <span>Danish N Reva AI sedang berpikir</span>
-                    <span class="animate-pulse">...</span>
+                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-indigo-400"></i>
+                    <span>Danish N Reva AI sedang menganalisis & berpikir...</span>
                 </div>
             `;
             chatContainer.appendChild(indicator);
@@ -308,6 +324,64 @@
         function removeTypingIndicator() {
             const indicator = document.getElementById('typing-indicator');
             if (indicator) indicator.remove();
+        }
+
+        // Generator Jawaban Natural AI
+        function generateAIResponseData(prompt, model) {
+            const text = prompt.toLowerCase();
+
+            if (text.includes('python') || text.includes('scraping') || text.includes('code') || text.includes('koding')) {
+                return {
+                    thought: "Pengguna meminta kode untuk web scraping. Saya perlu merancang skrip Python yang bersih menggunakan BeautifulSoup, menyertakan penanganan error HTTP, dan memberikan instruksi instalasi pustaka.",
+                    answer: "Tentu! Berikut adalah contoh skrip Python sederhana & efektif untuk melakukan web scraping berita menggunakan `requests` dan `BeautifulSoup`:\n\n```python\nimport requests\nfrom bs4 import BeautifulSoup\n\ndef scrape_berita(url):\n    try:\n        headers = {'User-Agent': 'Mozilla/5.0'}\n        response = requests.get(url, headers=headers)\n        \n        if response.status_code == 200:\n            soup = BeautifulSoup(response.text, 'html.parser')\n            titles = soup.find_all('h2')  # Mengambil elemen judul berita\n            \n            print(f\"--- Hasil Scraping dari {url} ---\")\n            for i, title in enumerate(titles, 1):\n                print(f\"{i}. {title.text.strip()}\")\n        else:\n            print(f\"Gagal mengambil halaman. Kode Status: {response.status_code}\")\n    except Exception as e:\n        print(f\"Terjadi kesalahan: {e}\")\n\n# Contoh penggunaan\nscrape_berita('https://news.ycombinator.com')\n```\n\n**Langkah Instalasi:**\n1. Buka terminal Anda dan jalankan: `pip install requests beautifulsoup4`\n2. Jalankan skrip Python di atas.\n\nApakah ada situs spesifik yang ingin Anda ambil datanya?"
+                };
+            } else if (text.includes('relativitas') || text.includes('einstein') || text.includes('fisika')) {
+                return {
+                    thought: "Pengguna menanyakan topik fisika kompleks (Relativitas). Saya harus menguraikannya menjadi dua bagian (Khusus & Umum) dengan analogi dunia nyata agar mudah dipahami tanpa rumus rumit.",
+                    answer: "Teori Relativitas Albert Einstein pada dasarnya dibagi menjadi dua konsep utama:\n\n1. **Relativitas Khusus (1905)**\n   - **Konsep:** Waktu dan ruang tidaklah konstan, melainkan fleksibel tergantung kecepatan gerak Anda.\n   - **Analogi:** Jika Anda naik pesawat dengan kecepatan mendekati cahaya, waktu bagi Anda berjalan lebih lambat dibandingkan orang yang diam di bumi.\n\n2. **Relativitas Umum (1915)**\n   - **Konsep:** Gravitasi bukanlah sekadar gaya tarik, melainkan **lengkungan ruang dan waktu** akibat benda bermassa besar.\n   - **Analogi:** Bayangkan meletakkan bola besi berat di atas kasur busa. Kasur akan melengkung ke bawah, sehingga kelereng di sekitarnya bergulir menuju bola besi tersebut.\n\nAda bagian spesifik yang ingin kita bahas lebih lanjut?"
+                };
+            } else if (text.includes('halo') || text.includes('hai') || text.includes('pagi') || text.includes('siang')) {
+                return {
+                    thought: "Pengguna memberikan salam. Tanggapi dengan ramah, komunikatif, dan tawarkan beberapa ide bantuan.",
+                    answer: "Halo! Selamat datang di **Danish N Reva AI**.\n\nSaya siap membantu Anda hari ini. Apa yang sedang ingin Anda kerjakan?\n- 💻 Menulis atau debug kode program\n- 📝 Menyusun artikel, email, atau esai\n- 💡 Menganalisis konsep & bertukar ide"
+                };
+            } else {
+                return {
+                    thought: `Pengguna bertanya tentang "${prompt}". Berikan respon komprehensif, terstruktur, dan analitis mengenai hal tersebut.`,
+                    answer: `Mengenai **"${prompt}"**, berikut adalah sudut pandang analitis yang dapat kita cermati:\n\n1. **Landasan Utama:**\n   Topik ini berkaitan erat dengan efisiensi dan pemahaman kontekstual yang mendalam.\n\n2. **Poin-Poin Penting:**\n   - Memahami akar permasalahan secara objektif.\n   - Menerapkan solusi terstruktur sesuai kebutuhan.\n   - Mengevaluasi hasil secara berkala.\n\nApakah Anda ingin saya membuatkan rincian lebih spesifik atau contoh penerapannya?`
+                };
+            }
+        }
+
+        // Parser Sederhana untuk Format Markdown (Bold, Code Block, Code Inline, Linebreaks)
+        function parseMarkdownSimple(text) {
+            let html = escapeHtml(text);
+
+            // Code Blocks ```lang ... ```
+            html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
+                return `<pre class="bg-slate-950 border border-slate-800 p-3 rounded-xl my-2 overflow-x-auto text-xs text-indigo-300"><code>${code}</code></pre>`;
+            });
+
+            // Inline Code `code`
+            html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+
+            // Bold **text**
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+
+            // Line breaks
+            html = html.replace(/\n/g, '<br>');
+
+            return html;
+        }
+
+        // Sanitasi HTML
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         // Function untuk saran prompt
