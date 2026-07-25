@@ -84,7 +84,7 @@
     <!-- MAIN AREA CHAT -->
     <main class="flex-1 flex flex-col h-full bg-slate-950 relative">
         
-        <!-- HEADER / MODEL SELECTOR -->
+        <!-- HEADER / MODEL SELECTOR & SHARE BUTTON -->
         <header class="h-16 border-b border-slate-800/80 px-4 flex items-center justify-between bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
             <div class="flex items-center gap-3">
                 <button id="open-sidebar-btn" class="md:hidden text-slate-400 hover:text-white p-1">
@@ -105,12 +105,43 @@
                 </div>
             </div>
 
-            <!-- Header Action Buttons -->
-            <div class="flex items-center gap-2">
-                <button class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+            <!-- DROPDOWN MENGGUNAKAN OPSI BAGIKAN -->
+            <div class="relative">
+                <button id="share-btn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
                     <span class="hidden sm:inline">Bagikan</span>
                 </button>
+
+                <!-- Menu Dropdown Bagikan -->
+                <div id="share-menu" class="hidden absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 z-30 space-y-1">
+                    <div class="text-[11px] font-semibold text-slate-500 uppercase px-2 py-1">Bagikan Obrolan</div>
+                    
+                    <!-- WhatsApp -->
+                    <button onclick="shareWhatsApp()" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition text-left">
+                        <i data-lucide="message-circle" class="w-4 h-4 text-emerald-400"></i>
+                        <span>WhatsApp</span>
+                    </button>
+
+                    <!-- Instagram -->
+                    <button onclick="shareInstagram()" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition text-left">
+                        <i data-lucide="instagram" class="w-4 h-4 text-pink-400"></i>
+                        <span>Instagram</span>
+                    </button>
+
+                    <!-- TikTok -->
+                    <button onclick="shareTikTok()" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition text-left">
+                        <i data-lucide="video" class="w-4 h-4 text-cyan-400"></i>
+                        <span>TikTok</span>
+                    </button>
+
+                    <div class="border-t border-slate-800/80 my-1"></div>
+
+                    <!-- Salin Link -->
+                    <button onclick="copyChatLink()" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition text-left">
+                        <i data-lucide="link-2" class="w-4 h-4 text-indigo-400"></i>
+                        <span id="copy-text">Salin Link</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -195,10 +226,62 @@
         const modelSelect = document.getElementById('model-select');
         const selectedModelBadge = document.getElementById('selected-model-badge');
         const newChatBtn = document.getElementById('new-chat-btn');
+        
+        // Share Dropdown Elements
+        const shareBtn = document.getElementById('share-btn');
+        const shareMenu = document.getElementById('share-menu');
 
         // Sidebar Responsive Toggle
         openSidebarBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
         closeSidebarBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+
+        // Toggle Menu Bagikan
+        shareBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shareMenu.classList.toggle('hidden');
+        });
+
+        // Tutup menu bagikan jika klik di luar dropdown
+        document.addEventListener('click', (e) => {
+            if (!shareMenu.contains(e.target) && !shareBtn.contains(e.target)) {
+                shareMenu.classList.add('hidden');
+            }
+        });
+
+        // FUNGSI OPSI BAGIKAN
+        function shareWhatsApp() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent("Lihat hasil obrolan seru ini di Danish N Reva AI: ");
+            window.open(`https://api.whatsapp.com/send?text=${text}${url}`, '_blank');
+            shareMenu.classList.add('hidden');
+        }
+
+        function shareInstagram() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link obrolan telah disalin! Anda dapat membagikannya melalui Story atau Pesan Instagram.");
+            window.open('https://www.instagram.com', '_blank');
+            shareMenu.classList.add('hidden');
+        }
+
+        function shareTikTok() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link obrolan telah disalin! Anda dapat membagikannya melalui Pesan TikTok.");
+            window.open('https://www.tiktok.com', '_blank');
+            shareMenu.classList.add('hidden');
+        }
+
+        function copyChatLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const copyTextSpan = document.getElementById('copy-text');
+                copyTextSpan.textContent = "Link Tersalin!";
+                copyTextSpan.classList.add('text-indigo-400');
+                setTimeout(() => {
+                    copyTextSpan.textContent = "Salin Link";
+                    copyTextSpan.classList.remove('text-indigo-400');
+                    shareMenu.classList.add('hidden');
+                }, 1500);
+            });
+        }
 
         // Model Switcher Badge Handler
         modelSelect.addEventListener('change', (e) => {
@@ -353,7 +436,7 @@
             }
         }
 
-        // Parser Sederhana untuk Format Markdown (Bold, Code Block, Code Inline, Linebreaks)
+        // Parser Markdown Sederhana
         function parseMarkdownSimple(text) {
             let html = escapeHtml(text);
 
